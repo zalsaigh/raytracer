@@ -19,26 +19,36 @@
 // If there is one root, then r hits the sphere at a tangent, and b^2-4ac = 0
 // If there are no roots, r does not hit the sphere, and b^2 - 4ac < 0
 
-bool HitSphere(const Point3& center, double radius, const Ray& r)
+double HitSphere(const Point3& center, double radius, const Ray& r)
 {
     Vec3 oc = r.GetOrigin() - center;
     double a = Dot(r.GetDirection(), r.GetDirection());
     double b = 2 * Dot(oc, r.GetDirection());
     double c = Dot(oc, oc) - radius*radius;
     double discriminant = b*b - 4*a*c;
-    return (discriminant > 0);
+    if (discriminant < 0)
+    {
+        // No roots.
+        return -1.0;  // Return t = -1, which will get filtered out in RayColour()
+    }
+    // Else, return the smaller of the two solutions (the - of +/-) as it is the first hit point of t.
+    return (-b - sqrt(discriminant)) / (2.0*a);
 }
 
 Colour RayColour(const Ray& r) 
 {
-    if (HitSphere(Point3(0,0,-1), 0.5, r))
-    {
-        return Colour(1,0,0);  // Red.
-    }
     // Recall that z is -1 because of the right hand rule: y is vertical, x is horizontal, so z goes into the screen.
     // Thus, z going out of the screen (i.e. what we see) is negative.
+    Point3 sphereCenter = Point3(0,0,-1);
+    double t = HitSphere(sphereCenter, 0.5, r);
+    if (t > 0)
+    {
+        // Point of intersection - Sphere Center gives a vector that points orthogonally/90 degree angle from the sphere surface.
+        Vec3 normal = UnitVector(r.At(t) - sphereCenter);
+        return 0.5*Colour(normal.X() + 1, normal.Y() + 1, normal.Z() + 1);
+    }
     Vec3 unitDirection = UnitVector(r.GetDirection());
-    double t =  0.5*(unitDirection.Y() + 1.0);
+    t = 0.5*(unitDirection.Y() + 1.0);
     return (1.0-t)*Colour(1.0, 1.0, 1.0) + t*Colour(0.5, 0.7, 1.0);
 }
 
