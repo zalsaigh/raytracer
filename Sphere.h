@@ -1,8 +1,8 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include "hittable.h"
-#include "vec3.h"
+#include "Hittable.h"
+#include "Vec3.h"
 
 class Sphere : public Hittable
 {

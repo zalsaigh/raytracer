@@ -1,7 +1,7 @@
 #include <iostream>
-#include "colour.h"
-#include "ray.h"
-#include "vec3.h"
+#include "Colour.h"
+#include "Ray.h"
+#include "Vec3.h"
 
 // Sphere eqn is (x - center.x)^2 + (y - center.y)^2 + (z - center.z)^2 = radius^2
 // r.GetOrigin() - center gives you a vector that can be used from the center to get to r.
