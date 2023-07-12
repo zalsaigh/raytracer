@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-const double COLOUR_MULT_FACTOR = 255.99;
+const double COLOUR_MULT_FACTOR = 255;
 
 void WriteColour(std::ostream& out, Colour pixelColour, int samplesPerPixel)
 {

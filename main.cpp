@@ -52,8 +52,8 @@ int main()
             Colour pixelColour(0,0,0);
             for (int sample = 0; sample < samplesPerPixel; ++sample)
             {
-                auto u = double(i + RandomDouble0To1()) / (imgWidth-1);
-                auto v = double(j + RandomDouble0To1()) / (imgHeight-1);
+                auto u = (i + RandomDouble0To1()) / (imgWidth-1);
+                auto v = (j + RandomDouble0To1()) / (imgHeight-1);
                 Ray r = camera.GetRay(u, v);
                 pixelColour += RayColour(r, world);
             }

@@ -2,9 +2,9 @@
 #define UTILS_H
 
 #include <cmath>
-#include <cstdlib>
 #include <limits>
 #include <memory>
+#include <random>
 
 
 // Usings
@@ -36,12 +36,11 @@ inline double DegreesToRadians(double degrees) {
     return degrees * pi / 180.0;
 }
 
-inline double RandomDouble0To1()
-{
-    // Returns a random double in [0,1)
-    return rand() / (RAND_MAX + 1);
+inline double RandomDouble0To1() {
+    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    static std::mt19937 generator;
+    return distribution(generator);
 }
-
 inline double RandomDouble(double min, double max)
 {
     // Returns a random double in [min, max)
