@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "Utils.h"
+
 using std::sqrt;
 
 class Vec3
@@ -105,5 +107,32 @@ inline Vec3 Cross(const Vec3 &u, const Vec3 &v)
 inline Vec3 UnitVector(Vec3 v)
 {
     return v / v.Length();
+}
+
+static inline Vec3 RandomVector()
+{
+    return Vec3(RandomDouble0To1(), RandomDouble0To1(), RandomDouble0To1());
+}
+
+static inline Vec3 RandomVector(double min, double max)
+{
+    return Vec3(RandomDouble(min, max), RandomDouble(min, max), RandomDouble(min, max));
+}
+
+Point3 RandomPointInUnitSphere()
+{
+    while (true)
+    {
+        Vec3 randomPoint = RandomVector(-1, 1);
+        if (randomPoint.LengthSquared() < 1)
+        {
+            return randomPoint;
+        }
+    }
+}
+
+Point3 RandomPointOnSurfaceOfUnitSphere()
+{
+    return UnitVector(RandomPointInUnitSphere());
 }
 #endif

@@ -8,12 +8,23 @@
 #include "HittableList.h"
 #include "Utils.h"
 
-Colour RayColour(const Ray& r, const Hittable& world) 
+Colour RayColour(const Ray& r, const Hittable& world, int recursiveDepthLimit) 
 {
     HitRecord rec;
-    if (world.Hit(r, 0, infinity, rec))
+
+    // If we've exceeded recursive diffuse light bouncing limit, end here and gather no more light.
+    if (recursiveDepthLimit <= 0)
     {
-        return 0.5 * (rec.normal + Colour(1,1,1));
+        return Colour(0,0,0);
+    }
+
+    if (world.Hit(r, 0.0001, infinity, rec))
+    {
+        // add randompointinunitsphere to get a point < 1 length away from (hitpoint + normal)
+        // UPDATE: RandomPointOnSurfaceOfUnitSphere gives us a better distribution of angles between target and normal (distribution scales by cos(phi) instead of cos^3(phi)) 
+        // which means more angles, which means better randomizing. This is known as true lambertian reflection.
+        Point3 target = rec.hitPoint + rec.normal + RandomPointOnSurfaceOfUnitSphere();
+        return 0.5 * RayColour(Ray(rec.hitPoint, target - rec.hitPoint), world, recursiveDepthLimit - 1);
     }
     Vec3 unitDirection = UnitVector(r.GetDirection());
     double t = 0.5*(unitDirection.Y() + 1.0);
@@ -29,6 +40,7 @@ int main()
     const int imgHeight = static_cast<int>(imgWidth/aspectRatio);
     const int maxValueForColorChannel = 255;
     const int samplesPerPixel = 100;
+    const int maxRayColourRecursiveDepth = 50;
 
     // World
     HittableList world;
@@ -55,7 +67,7 @@ int main()
                 auto u = (i + RandomDouble0To1()) / (imgWidth-1);
                 auto v = (j + RandomDouble0To1()) / (imgHeight-1);
                 Ray r = camera.GetRay(u, v);
-                pixelColour += RayColour(r, world);
+                pixelColour += RayColour(r, world, maxRayColourRecursiveDepth);
             }
             WriteColour(std::cout, pixelColour, samplesPerPixel);
         }

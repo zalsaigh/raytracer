@@ -9,9 +9,9 @@ const double COLOUR_MULT_FACTOR = 255;
 
 void WriteColour(std::ostream& out, Colour pixelColour, int samplesPerPixel)
 {
-    double r = pixelColour.X() / samplesPerPixel;
-    double g = pixelColour.Y() / samplesPerPixel;
-    double b = pixelColour.Z() / samplesPerPixel;
+    double r = sqrt(pixelColour.X() / samplesPerPixel);
+    double g = sqrt(pixelColour.Y() / samplesPerPixel);
+    double b = sqrt(pixelColour.Z() / samplesPerPixel);
 
 
     // Write the translated [0, 255] value of each colour component.
