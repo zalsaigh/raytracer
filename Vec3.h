@@ -53,7 +53,6 @@ class Vec3
 };
 
 using Point3 = Vec3;
-using Colour = Vec3;
 
 // vec3 Utility Functions
 

@@ -20,18 +20,6 @@ const double pi = 3.1415926535897932385;
 
 // Utility Functions
 
-inline double Clamp(double x, double min, double max)
-{
-    if (x < min)
-    {
-        return min;
-    }
-    if (x > max)
-    {
-        return max;
-    }
-    return x;
-}
 inline double DegreesToRadians(double degrees) {
     return degrees * pi / 180.0;
 }

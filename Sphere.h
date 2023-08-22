@@ -27,7 +27,7 @@ class Sphere : public Hittable
     // center is not a Point3& so we can instantialize shared pointers with rvalues
     Sphere(Point3 center, double r) : center(center), radius(r) {};
 
-    bool Hit(const Ray& r, double tMin, double tMax, HitRecord& record) const override;
+    bool Hit(const Ray& r, Interval tInterval, HitRecord& outRecord) const override;
 
     Point3 center;
     double radius;
@@ -36,7 +36,7 @@ class Sphere : public Hittable
 // The reason why I have implementations here and not in a .cpp file is because it's tedious 
 // to keep updating the tasks.json file for the build task to include cpp files.
 // If these files are not included in tasks.json, they will not be picked up.
-bool Sphere::Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) const
+bool Sphere::Hit(const Ray& r, Interval tInterval, HitRecord& outRecord) const
 {
     Vec3 oc = r.GetOrigin() - center;
     double a = Dot(r.GetDirection(), r.GetDirection());
@@ -50,10 +50,14 @@ bool Sphere::Hit(const Ray& r, double tMin, double tMax, HitRecord& outRecord) c
     }
     // Else, return the smaller of the two roots (the - of +/-) as it is the first hit point of t.
     auto nearestT = (-b - sqrt(discriminant)) / (2.0*a);
-    if (nearestT < tMin || nearestT > tMax)
+    if (!tInterval.Surrounds(nearestT))
     {
-        // Falls outside of range
-        return false;
+        nearestT = (-b + sqrt(discriminant)) / (2.0*a);
+        if (!tInterval.Surrounds(nearestT))
+        {
+            // Falls outside of range
+            return false;
+        }
     }
 
     outRecord.t = nearestT;
