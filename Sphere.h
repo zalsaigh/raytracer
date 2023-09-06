@@ -20,17 +20,19 @@
 #include "Hittable.h"
 #include "Vec3.h"
 
+class Material;
 class Sphere : public Hittable
 {
   public:
     Sphere() {}
     // center is not a Point3& so we can instantialize shared pointers with rvalues
-    Sphere(Point3 center, double r) : center(center), radius(r) {};
+    Sphere(Point3 center, double r, shared_ptr<Material> material) : center(center), radius(r), material(material) {};
 
     bool Hit(const Ray& r, Interval tInterval, HitRecord& outRecord) const override;
 
     Point3 center;
     double radius;
+    shared_ptr<Material> material;
 };
 
 // The reason why I have implementations here and not in a .cpp file is because it's tedious 
@@ -65,6 +67,7 @@ bool Sphere::Hit(const Ray& r, Interval tInterval, HitRecord& outRecord) const
     // hitPoint minus sphere center gives a vector that points orthogonally/90 degree angle from the sphere surface.
     Vec3 outwardNormal = UnitVector(outRecord.hitPoint - center); // Equivalent to (outRecord.hitPoint - center) / radius since radius is the length of that vector.
     outRecord.SetFaceAndNormal(r, outwardNormal);
+    outRecord.material = material;
 
     return true;
 }

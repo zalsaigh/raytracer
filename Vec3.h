@@ -49,6 +49,11 @@ class Vec3
             return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
         }
 
+        bool NearZero() const {
+            auto epsilon = 1e-8;
+            return (fabs(e[0]) < epsilon)  && (fabs(e[1]) < epsilon) && (fabs(e[2]) < epsilon);
+        }
+
         double e[3];
 };
 
@@ -117,6 +122,16 @@ static inline Vec3 RandomVector(double min, double max)
 {
     return Vec3(RandomDouble(min, max), RandomDouble(min, max), RandomDouble(min, max));
 }
+
+Vec3 Reflect(const Vec3& incomingVec, const Vec3& normal)
+{
+    // Idea here is that Dot(incomingVec, normal) * normal gives a vector B that is the
+    // projection of incomingVec onto the normal (visually this looks like the south part of the normal,
+    // which puts us inside the sphere). Subtracting it flips its direction and has it pointing the same
+    // direction as the normal. Subtracting it once from incomingVec gives a vector that is horizontal/perpendicular
+    // to the normal. Subtracting it twice from incomingVec gives the desired reflected vector.
+    return incomingVec - 2 * Dot(incomingVec, normal) * normal;
+} 
 
 Point3 RandomPointInUnitSphere()
 {

@@ -4,6 +4,7 @@
 #include "Utils.h"
 #include "Hittable.h"
 #include "Colour.h"
+#include "Material.h"
 
 #include <iostream>
 
@@ -84,11 +85,14 @@ class Camera
 
       if (world.Hit(r, Interval(0.0001, infinity), rec))
       {
-          // add randompointinunitsphere to get a point < 1 length away from (hitpoint + normal)
-          // UPDATE: RandomPointOnSurfaceOfUnitSphere gives us a better distribution of angles between target and normal (distribution scales by cos(phi) instead of cos^3(phi)) 
-          // which means more angles, which means better randomizing. This is known as true lambertian reflection.
-          Point3 target = rec.hitPoint + rec.normal + RandomPointOnSurfaceOfUnitSphere();
-          return 0.5 * RayColour(Ray(rec.hitPoint, target - rec.hitPoint), world, recursiveDepthLimit - 1);
+          Ray scattered;
+          Colour attenuation;
+          if (rec.material->Scatter(r, rec, attenuation, scattered))
+          {
+            return attenuation * RayColour(scattered, world, recursiveDepthLimit - 1);
+          }
+          // If scattering doesn't happen, that means the ray is absorbed. Return black.
+          return Colour(0,0,0);
       }
       Vec3 unitDirection = UnitVector(r.GetDirection());
       double t = 0.5*(unitDirection.Y() + 1.0);

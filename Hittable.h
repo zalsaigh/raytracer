@@ -4,6 +4,7 @@
 #include "Ray.h"
 #include "Interval.h"
 
+class Material;
 class HitRecord
 {
   public:
@@ -11,6 +12,7 @@ class HitRecord
     Vec3 normal;
     double t;
     bool frontFace;  // True if the ray is hitting the outer face of the sphere, false if ray is "inside" sphere and hitting the inner face.
+    shared_ptr<Material> material;
 
     void SetFaceAndNormal(const Ray& r, const Vec3& outwardNormal)
     {
