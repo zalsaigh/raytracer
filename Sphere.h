@@ -65,7 +65,7 @@ bool Sphere::Hit(const Ray& r, Interval tInterval, HitRecord& outRecord) const
     outRecord.t = nearestT;
     outRecord.hitPoint = r.At(nearestT);
     // hitPoint minus sphere center gives a vector that points orthogonally/90 degree angle from the sphere surface.
-    Vec3 outwardNormal = UnitVector(outRecord.hitPoint - center); // Equivalent to (outRecord.hitPoint - center) / radius since radius is the length of that vector.
+    Vec3 outwardNormal = (outRecord.hitPoint - center) / radius; // BASICALLY same as UnitVector(outRecord.hitPoint - center) EXCEPT that this accounts for negative radius (sec 11.5)
     outRecord.SetFaceAndNormal(r, outwardNormal);
     outRecord.material = material;
 

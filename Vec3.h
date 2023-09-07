@@ -123,15 +123,27 @@ static inline Vec3 RandomVector(double min, double max)
     return Vec3(RandomDouble(min, max), RandomDouble(min, max), RandomDouble(min, max));
 }
 
+// Idea here is that Dot(incomingVec, normal) * normal gives a vector B that is the
+// projection of incomingVec onto the normal (visually this looks like the south part of the normal,
+// which puts us inside the sphere). Subtracting it flips its direction and has it pointing the same
+// direction as the normal. Subtracting it once from incomingVec gives a vector that is horizontal/perpendicular
+// to the normal. Subtracting it twice from incomingVec gives the desired reflected vector.
 Vec3 Reflect(const Vec3& incomingVec, const Vec3& normal)
 {
-    // Idea here is that Dot(incomingVec, normal) * normal gives a vector B that is the
-    // projection of incomingVec onto the normal (visually this looks like the south part of the normal,
-    // which puts us inside the sphere). Subtracting it flips its direction and has it pointing the same
-    // direction as the normal. Subtracting it once from incomingVec gives a vector that is horizontal/perpendicular
-    // to the normal. Subtracting it twice from incomingVec gives the desired reflected vector.
     return incomingVec - 2 * Dot(incomingVec, normal) * normal;
-} 
+}
+
+// Idea here is that the refracted ray is made up of a perpendicular and a parallel part. These parts are
+// perp/parallel to the normal. Dot(a,b) = |a||b|cos(theta), but if a and b are unit vectors, then 
+// cos(theta) = Dot(a,b), where a is the incomingVec (negative to reverse direction) and b is normal (theta is the angle between them).
+// For formulas for perp and parallel, just believe LOL.
+Vec3 Refract(const Vec3& incomingVec, const Vec3& normal, double etaOverEtaPrime)
+{
+    auto cosTheta = fmin(Dot(-incomingVec, normal), 1.0);
+    Vec3 refractedRayPerpPart = etaOverEtaPrime * (incomingVec + cosTheta * normal);
+    Vec3 refractedRayParallelPart = -sqrt(fabs(1.0 - refractedRayPerpPart.LengthSquared())) * normal;
+    return refractedRayPerpPart + refractedRayParallelPart;
+}
 
 Point3 RandomPointInUnitSphere()
 {
