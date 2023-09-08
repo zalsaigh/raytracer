@@ -14,7 +14,7 @@ int main()
     // World
     HittableList world;
     
-    // Metals
+    // Materials
     auto materialGround = make_shared<Lambertian>(Colour(0.8, 0.8, 0.0));
     auto materialCenter = make_shared<Lambertian>(Colour(0.1, 0.2, 0.5)); 
     auto materialLeft = make_shared<Dielectric>(1.5); // 1.5 is the index of refraction for glass.
@@ -25,11 +25,16 @@ int main()
     world.Add(make_shared<Sphere>(Point3(-1, 0, -1), 0.5, materialLeft));
     world.Add(make_shared<Sphere>(Point3(-1, 0, -1), -0.4, materialLeft));
     world.Add(make_shared<Sphere>(Point3(1, 0, -1), 0.5, materialRight));
-    
+
     // Camera - x points left/right, y points up/down, z points in/out.
     // Recall that z is -1 because of the right hand rule: y is vertical, x is horizontal, so z goes towards the camera.
     // Thus, z going away from the camera (i.e. what we see) is negative.
     Camera camera;
+
+    camera.mVerticalFOV = 20;
+    camera.mLookFrom = Point3(-2, 2, 1);
+    camera.mLookAt = Point3(0, 0, -1);
+    camera.mVecUp = Vec3(0, 1, 0);
 
     camera.Render(world);
 }

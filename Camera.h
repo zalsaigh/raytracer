@@ -18,6 +18,14 @@ class Camera
       int mSamplesPerPixel = 100;
       int mMaxRayColourRecursiveDepth = 50;
 
+      // See https://raytracing.github.io/images/fig-1.18-cam-view-geom.jpg
+      double mVerticalFOV = 90; // Vertical view angle (centered around the z-axis at z = focalLength). On either side of z-axis is h units, with h = tan(mVerticalFOV/2) assuming focalLength = 1
+      // This is the viewing angle from edge to edge of the viewport (vertically, so the horizontal edges on top and bottom of viewport)
+      Point3 mLookFrom = Point3(0, 0, -1);  // Point camera is looking from
+      Point3 mLookAt = Point3(0, 0, 0);  // Point camera is looking at
+      Vec3 mVecUp = Vec3(0, 1, 0);  // Camera-relative "up" direction
+      
+
     void Render(const Hittable& world)
     {
       Initialize();
@@ -27,15 +35,13 @@ class Camera
       std::cout << mImgWidth << " " << mImgHeight << "\n";
       std::cout << mMaxValueForColorChannel << "\n";
 
-      for (int j = mImgHeight-1; j >= 0; --j) {
-        std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+      for (int j = 0; j < mImgHeight; ++j) {
+        std::cerr << "\rScanlines remaining: " << mImgHeight - j << ' ' << std::flush;
         for (int i = 0; i < mImgWidth; ++i) {
             Colour pixelColour(0,0,0);
             for (int sample = 0; sample < mSamplesPerPixel; ++sample)
             {
-                auto u = (i + RandomDouble0To1()) / (mImgWidth-1);
-                auto v = (j + RandomDouble0To1()) / (mImgHeight-1);
-                Ray r = GetRay(u, v);
+                Ray r = GetRayToShoot(i, j);
                 pixelColour += RayColour(r, world, mMaxRayColourRecursiveDepth);
             }
             WriteColour(std::cout, pixelColour, mSamplesPerPixel);
@@ -47,32 +53,58 @@ class Camera
   private:
     int mImgHeight;
     Point3 mCameraOrigin;
-    Point3 mLowerLeftCorner;
-    Vec3 mHorizontalAxis;
-    Vec3 mVerticalAxis;
+    Vec3 mPixel00Location;  // Center of the upper left pixel
+    Vec3 mPixelHorizontalSpacing; // The horizontal and vertical delta vectors from pixel to pixel
+    Vec3 mPixelVerticalSpacing;
+    Vec3 mBasisU, mBasisV, mBasisW;  // Camera frame unit basis vectors. U points to camera's right, V points to camera's up, and W points opposite the view direction.
 
     void Initialize()
     {
       mImgHeight = static_cast<int>(mImgWidth / mAspectRatio);
       mImgHeight = (mImgHeight < 1) ? 1 : mImgHeight;
 
-      mCameraOrigin = Point3(0,0,0);
+      mCameraOrigin = mLookFrom;
 
-      // x points left/right, y points up/down, z points in/out.
-      double viewportHeight = 2.0;
+      // Viewport dimensions. Viewport is the rectangle that defines our pixels through which we send rays into the scene.
+      double focalLength = (mLookFrom - mLookAt).Length(); // Distance from camera to viewport in z-axis
+      double theta = DegreesToRadians(mVerticalFOV);
+      double heightAboveZAxis = tan(theta/2);
+      double viewportHeight = 2 * heightAboveZAxis * focalLength;
       double viewportWidth = viewportHeight * (static_cast<double>(mImgWidth) / mImgHeight);  // We re-do division here to calculate aspect ratio because of rounding errors with C++.
-      double focalLength = 1.0;
 
-      mHorizontalAxis = Vec3(viewportWidth, 0, 0);
-      mVerticalAxis = Vec3(0, viewportHeight, 0);
-      mLowerLeftCorner = mCameraOrigin - mHorizontalAxis/2 - mVerticalAxis/2 - Vec3(0, 0, focalLength);
+      mBasisW = UnitVector(mLookFrom - mLookAt);
+      mBasisU = UnitVector(Cross(mVecUp, mBasisW));  // Recall that cross product produces a vector orthogonal to both inputs
+      mBasisV = Cross(mBasisW, mBasisU);
+
+      // Both edges are defined so that the upper left corner is where they originate from
+      Vec3 viewportHorizontalEdge = viewportWidth * mBasisU;
+      Vec3 viewportVerticalEdge = viewportHeight * -mBasisV;
+
+      mPixelHorizontalSpacing = viewportHorizontalEdge / mImgWidth;
+      mPixelVerticalSpacing = viewportVerticalEdge / mImgHeight;
+
+      // First subtraction gets us from camera origin to the center of the viewport (remember that mBasisW is positive in the opposite direction). The other two get us to upper left.
+      Vec3 viewportUpperLeftCorner = mCameraOrigin - (focalLength * mBasisW) - viewportHorizontalEdge/2 - viewportVerticalEdge/2;
+      mPixel00Location = viewportUpperLeftCorner + (mPixelHorizontalSpacing + mPixelVerticalSpacing)/2;
     }
 
-    Ray GetRay(double u, double v) const
+    Ray GetRayToShoot(int i, int j) const
     {
-      return Ray(mCameraOrigin, mLowerLeftCorner + u*mHorizontalAxis + v*mVerticalAxis - mCameraOrigin);
+       Point3 pixelCenter = mPixel00Location + (i * mPixelHorizontalSpacing) + (j * mPixelVerticalSpacing);
+       Point3 pixelSample = pixelCenter + GetRandomPixelOffset();
+
+       Vec3 rayDirection = pixelSample - mCameraOrigin;
+
+       return Ray(mCameraOrigin, rayDirection);
     }
 
+    Vec3 GetRandomPixelOffset() const 
+    {
+      // Gets offsets from -0.5 to 0.5, which assumes we are at pixel center. We scale -0.5 to 0.5 by the actual spacing (dimensions of each pixel).
+      double horizontalOffset = -0.5 + RandomDouble0To1();
+      double verticalOffset = -0.5 + RandomDouble0To1();
+      return (horizontalOffset * mPixelHorizontalSpacing) + (verticalOffset * mPixelVerticalSpacing);
+    }
     Colour RayColour(const Ray& r, const Hittable& world, int recursiveDepthLimit) const
     {
       HitRecord rec;
