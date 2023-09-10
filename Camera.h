@@ -115,7 +115,7 @@ class Camera
           return Colour(0,0,0);
       }
 
-      if (world.Hit(r, Interval(0.0001, infinity), rec))
+      if (world.Hit(r, Interval(0.001, infinity), rec))
       {
           Ray scattered;
           Colour attenuation;
